@@ -1,0 +1,238 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>Minecraft Randomizer</title>
+    </head>
+    <body>
+        <div class="randomizer">
+          <div class="text"></div>
+        </div>
+        <h4 style="position: absolute;bottom: 0;left: 0;">by Pharuxtan</h4>
+    </body>
+    <script>window.$ = window.jQuery = require("./jquery-3.4.1.min.js")</script>
+    <script>
+      const fs = require("fs");
+      const path = require("path");
+      const random = require('random');
+      const seedrandom = require('seedrandom');
+      const yazl = require("yazl");
+      const DecompressZip = require('decompress-zip');
+      const platformFolders = require("platform-folders");
+      const fetch = require("node-fetch");
+      const sysRoot = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME);
+      const workingPath = path.join(sysRoot, '.minecraft');
+      const temp = require('temp-dir');
+      const {shell} = require('electron');
+
+      $("div.text").replaceWith('<div class="text" style="text-align: center">Loading...</div>');
+
+      window._getFiles = function (dir, files_) {
+          files_ = files_ || [];
+          if(fs.existsSync(dir)) {
+              var files = fs.readdirSync(dir);
+              for(var i in files) {
+                  var name = dir + '/' + files[i];
+                  if(fs.statSync(name).isDirectory()) {
+                      _getFiles(name, files_);
+                  }
+                  else {
+                      files_.push(name);
+                  }
+              }
+          }
+          return files_;
+      }
+
+      window._getVersions = function (dir, versions) {
+          versions = versions || [];
+          if(fs.existsSync(dir)) {
+              var folders = fs.readdirSync(dir);
+              for(var i in folders) {
+                  versions.push(folders[i]);
+              }
+          }
+          return versions;
+      }
+
+      window._readJarFile = function (jarPath, archivedFilePath, cb) {
+          archive.readFile(jarPath, archivedFilePath, cb)
+      }
+
+      if(!fs.existsSync(workingPath)){
+        $("div.text").replaceWith('<div class="text" style="text-align: center">the .minecraft folder doesn\'t exist</div>');
+      } else {
+        (async () => {
+          if(!fs.existsSync(workingPath)){
+            $("div.text").replaceWith('<div class="text" style="text-align: center">the .minecraft/versions folder doesn\'t exist</div>');
+          } else {
+            let select = '<select id="version">';
+            let mcversions = _getVersions(`${workingPath}/versions`);
+            mcversions = mcversions.filter(ver => {
+              if(fs.existsSync(`${workingPath}\\versions\\${ver}\\${ver}.jar`)){
+                return true
+              } else {
+                return false
+              }
+            });
+            let versions = await fetch("https://launchermeta.mojang.com/mc/game/version_manifest.json").then(res => res.json()).then(js => js.versions);
+            versions = versions.map(n => n.id).join("\u2024");
+            let len = versions.indexOf("17w43a")+"17w43a".length;
+            versions = versions.substring(0, len).split("\u2024");
+            let check = [];
+            for(var i in versions){
+              let version = versions[i];
+              mcversions.map(ver => {
+                if(ver === version){
+                  check.push(version);
+                  select += `<option value="${version}">${version}</option>`;
+                }
+              });
+            }
+            select += "</select>";
+            if(check[0] === undefined){
+              $("div.text").replaceWith('<div class="text" style="text-align: center">No minecraft versions do you have is comptible, please install <strong>17w43a</strong> or later</div>');
+            } else {
+              $("div.text").replaceWith(`<div class="text" style="text-align: center"><h1>Minecraft Randomizer GUI</h1><p>Select a version</p>${select}<p>Select what do you want to randomize</p><input type="checkbox" name="random" value="loot" checked/>Loot Tables  <input type="checkbox" name="random" value="recipes" />Recipes<p>Seed</p><textarea rows="1" cols="15" id="seed"></textarea></br></br><button type="button" onclick="randomizer()">Randomize!</button><br><div class="result" style="text-align: center"><p>\u2009<p></div></div>`);
+            }
+          }
+        })();
+      }
+
+      async function randomizer(){
+        let ver = $("#version option:selected" ).text();
+        let result = $('input[type="checkbox"]:checked');
+        let seed = ($('#seed').val() === "") ? Math.floor(Math.random() * 9999999999999)+1 : (isNaN(parseInt($('#seed').val()))) ? Math.floor(Math.random() * 9999999999999)+1 : $('#seed').val();
+        if(result.length == 0){
+          $("div.result").replaceWith(`<div class="result" style="text-align: center"><p>Please check one of the boxes<p></div>`);
+        } else {
+          let results = [];
+          result.each(function () {
+            results.push($(this).val());
+          });
+          let loot = (results.includes("loot")) ? true : false;
+          let recipes = (results.includes("recipes")) ? true : false;
+          let documents = platformFolders.getDocumentsFolder();
+          let jar = `${workingPath}\\versions\\${ver}\\${ver}.jar`;
+          console.log(`random:\nver: ${ver}\nloot: ${loot}\nrecipes: ${recipes}\nseed: ${seed}`);
+          let extLoot = "data/minecraft/loot_tables";
+          let extRecipes = "data/minecraft/recipes";
+          let extTo = path.normalize(temp + `\\mcrandomizer\\${ver}`);
+          function create(){
+            let datapack_name = `random_${seed}`;
+            let datapack_desc = `Table Randomizer, Seed: ${seed}`;
+            random.use(seedrandom(seed));
+            let datapack_filename = documents + "\\mcrandomizer\\" + datapack_name + '.zip';
+            console.log('Generating datapack...');
+            console.log(`Seed: ${seed}`);
+            $("div.result").replaceWith(`<div class="result" style="text-align: center"><p>Generating datapack...</p><p>Seed: <strong>${seed}</strong></p></div>`);
+            var zipfile = new yazl.ZipFile();
+            if(loot){
+              let folder = `${extTo}\\data\\minecraft\\loot_tables`;
+              let file_list = [].concat(_getFiles(folder));
+              let remaining = [].concat(_getFiles(folder));
+              let file_dict = {};
+              for(fil in file_list){
+                let file = file_list[fil];
+                let i = random.int(min = 0, max = (remaining.length-1));
+                file_dict[file] = remaining[i].replace(/[\\]/g, "/");
+                remaining = remaining.filter(function(value, index, arr){return value !== file});
+              }
+              for(from_file in file_dict){
+                let contents = function (){
+                  let content = require(path.resolve(file_dict[from_file]));
+                  if(from_file.indexOf("entities") !== -1){
+                    content.type = "minecraft:entity";
+                  } else if(from_file.indexOf("blocks") !== -1){
+                    content.type = "minecraft:block";
+                  } else if(from_file.indexOf("chests") !== -1){
+                    content.type = "minecraft:chest";
+                  } else if(from_file.indexOf("gameplay") !== -1){
+                    content.type = "minecraft:gift";
+                  }
+                  return JSON.stringify(content, null, 2);
+                }
+                zipfile.addBuffer(Buffer.from(contents()), from_file.replace(/[\\]/g, "/").replace(`${temp.replace(/[\\]/g, "/")}/mcrandomizer/${ver}/`, ""));
+              }
+            } if(recipes){
+              let folder = `${extTo}\\data\\minecraft\\recipes`;
+              let file_list = [].concat(_getFiles(folder));
+              let remaining = [].concat(_getFiles(folder));
+              let file_dict = {};
+              for(fil in file_list){
+                let file = file_list[fil];
+                let i = random.int(min = 0, max = (remaining.length-1))
+                file_dict[file] = remaining[i].replace(/[\\]/g, "/");
+                remaining = remaining.filter(function(value, index, arr){return value !== file});
+              }
+              for(from_file in file_dict){
+                let contents = function (){
+                  let content = require(path.resolve(file_dict[from_file]));
+                  return JSON.stringify(content, null, 2);
+                }
+                zipfile.addBuffer(Buffer.from(contents()), from_file.replace(/[\\]/g, "/").replace(`${temp.replace(/[\\]/g, "/")}/mcrandomizer/${ver}/`, ""));
+              }
+            }
+
+            zipfile.addBuffer(Buffer.from(JSON.stringify({'pack':{'pack_format':1, 'description':datapack_desc}}, null, 4)), "pack.mcmeta");
+            zipfile.addBuffer(Buffer.from(JSON.stringify({'values':[`${datapack_name}:reset`]}, null, 0)), "data/minecraft/tags/functions/load.json");
+            zipfile.addBuffer(Buffer.from('tellraw @a ["",{"text":"Table randomizer by SethBling","color":"green"}]'), `data/${datapack_name}/functions/reset.mcfunction`);
+            if(!fs.existsSync(documents+"/mcrandomizer")){
+              fs.mkdirSync(documents+"/mcrandomizer",{recursive: true})
+            }
+            zipfile.outputStream.pipe(fs.createWriteStream(datapack_filename)).on("close", function() {
+              console.log(`Created datapack "${datapack_filename}"`);
+              $("div.result").replaceWith(`<div class="result" style="text-align: center"><p>Created datapack in "${datapack_filename}"</p><p>Seed: <strong>${seed}</strong></p><button type="button" onclick="openpath('${(process.platform === "win32") ? datapack_filename.replace(/[\\]/g, "/") : datapack_filename}');">Open in explorer</button></div>`);
+            }).on("error", function(err) {
+              console.log(`The file "${datapack_filename}" can't be written because the file is used by another process`);
+              $("div.result").replaceWith(`<div class="result" style="text-align: center"><p>The file "${datapack_filename}" can't be written because the file is used by another process</p></div>`);
+            });
+            zipfile.end();
+          }
+          if(fs.existsSync(extTo)){
+            create();
+          } else {
+            $("div.result").replaceWith(`<div class="result" style="text-align: center"><p>Decompressing Minecraft ${ver} JAR<p></div>`);
+      			let unzipper = new DecompressZip(jar);
+            unzipper.on('error', function (err) {throw err});
+      			unzipper.on('extract', function (log) {
+      				$("div.result").replaceWith(`<div class="result" style="text-align: center"><p>Extract finish<p></div>`);
+              console.log("Extract finish");
+              create();
+      			});
+      			unzipper.on('progress', function (fileIndex, fileCount) {
+              var perc = Math.floor(((fileIndex+1)*100)/fileCount);
+              console.log(`Extracted file ${(fileIndex + 1)} of ${fileCount} ${perc}%`)
+              $("div.result").replaceWith(`<div class="result" style="text-align: center"><p>Extracted file ${(fileIndex+1)} of ${fileCount} ${perc}%<p><progress id="file" max="${fileCount}" value="${(fileIndex+1)}"> ${perc} </progress></div>`);
+      			});
+      			unzipper.extract({
+      				path: extTo,
+      				filter: function (file) {
+      					return file.type !== "SymbolicLink";
+      				}
+      			});
+          }
+        };
+      }
+
+      async function openpath(fpath){
+        let command = '';
+        switch (process.platform) {
+          case 'darwin':
+            command = 'open -R ' + fpath;
+            break;
+          case 'win32':
+            if (process.env.SystemRoot) {
+              command = process.env.SystemRoot+'\\explorer.exe';
+            } else {
+              command = 'explorer.exe';
+            }
+            command += ' /select,' + fpath.replace(/[\/]/g, "\\");
+            break;
+          default:
+            fpath = path.dirname(fpath)
+            command = 'xdg-open ' + fpath;
+        }
+        require("child_process").exec(command, function(stdout) {});
+      }
+    </script>
+</html>
