@@ -14,7 +14,6 @@
       const fs = require("fs");
       const path = require("path");
       const random = require('random');
-      const seedrandom = require('seedrandom');
       const yazl = require("yazl");
       const DecompressZip = require('decompress-zip');
       const platformFolders = require("platform-folders");
@@ -116,7 +115,7 @@
           function create(){
             let datapack_name = `random_${seed}`;
             let datapack_desc = `Table Randomizer, Seed: ${seed}`;
-            random.use(seedrandom(seed));
+            random.use(seed);
             let datapack_filename = documents + "\\mcrandomizer\\" + datapack_name + '.zip';
             console.log('Generating datapack...');
             console.log(`Seed: ${seed}`);
