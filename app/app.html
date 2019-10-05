@@ -87,7 +87,7 @@
             if(check[0] === undefined){
               $("div.text").replaceWith('<div class="text" style="text-align: center">No minecraft versions do you have is comptible, please install <strong>17w43a</strong> or later</div>');
             } else {
-              $("div.text").replaceWith(`<div class="text" style="text-align: center"><h1>Minecraft Randomizer GUI</h1><p>Select a version</p>${select}<p>Select what do you want to randomize</p><input type="checkbox" name="random" value="loot" checked/>Loot Tables  <input type="checkbox" name="random" value="recipes" />Recipes<p>Seed</p><textarea rows="1" cols="15" id="seed"></textarea></br></br><button type="button" onclick="randomizer()">Randomize!</button><br><div class="result" style="text-align: center"><p>\u2009<p></div></div>`);
+              $("div.text").replaceWith(`<div class="text" style="text-align: center"><h1>Minecraft Randomizer GUI</h1><p>Select a version</p>${select}<p>Select what do you want to randomize</p><input type="checkbox" name="random" value="blocks" checked/>Blocks  <input type="checkbox" name="random" value="chests" checked/>Chests  <input type="checkbox" name="random" value="entities" checked/>Entities  <input type="checkbox" name="random" value="gameplay" checked/>Gameplay  <input type="checkbox" name="random" value="recipes" />Recipes<p>Seed</p><textarea rows="1" cols="15" id="seed"></textarea></br></br><button type="button" onclick="randomizer()">Randomize!</button><br><div class="result" style="text-align: center"><p>\u2009<p></div></div>`);
             }
           }
         })();
@@ -104,7 +104,20 @@
           result.each(function () {
             results.push($(this).val());
           });
-          let loot = (results.includes("loot")) ? true : false;
+          let blocks = (results.includes("blocks")) ? true : false;
+          let chests = (results.includes("chests")) ? true : false;
+          let entities = (results.includes("entities")) ? true : false;
+          let gameplay = (results.includes("gameplay")) ? true : false;
+          let loot;
+          console.log(blocks);
+          console.log(chests);
+          console.log(entities);
+          console.log(gameplay);
+          if(blocks || chests || entities || gameplay){
+            loot = true
+          } else {
+            loot = false
+          }
           let recipes = (results.includes("recipes")) ? true : false;
           let documents = platformFolders.getDocumentsFolder();
           let jar = `${workingPath}\\versions\\${ver}\\${ver}.jar`;
@@ -122,9 +135,15 @@
             $("div.result").replaceWith(`<div class="result" style="text-align: center"><p>Generating datapack...</p><p>Seed: <strong>${seed}</strong></p></div>`);
             var zipfile = new yazl.ZipFile();
             if(loot){
-              let folder = `${extTo}\\data\\minecraft\\loot_tables`;
-              let file_list = [].concat(_getFiles(folder));
-              let remaining = [].concat(_getFiles(folder));
+              let bfolder = `${extTo}\\data\\minecraft\\loot_tables\\blocks`;
+              let cfolder = `${extTo}\\data\\minecraft\\loot_tables\\chests`;
+              let efolder = `${extTo}\\data\\minecraft\\loot_tables\\entities`;
+              let gfolder = `${extTo}\\data\\minecraft\\loot_tables\\gameplay`;
+              let file_list = remaining = [];
+              if(blocks) file_list = remaining = file_list.concat(_getFiles(bfolder));
+              if(chests) file_list = remaining = file_list.concat(_getFiles(cfolder));
+              if(entities) file_list = remaining = file_list.concat(_getFiles(efolder));
+              if(gameplay) file_list = remaining = file_list.concat(_getFiles(gfolder));
               let file_dict = {};
               for(fil in file_list){
                 let file = file_list[fil];
