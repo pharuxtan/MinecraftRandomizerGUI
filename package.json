@@ -7,12 +7,13 @@
   "scripts": {
     "start": "electron .",
     "pack": "electron-builder --dir",
-	"dist:win": "electron-builder --windows",
-	"dist:linux": "electron-builder --linux deb tar.gz"
+    "dist:win": "electron-builder --windows",
+    "dist:linux": "electron-builder --linux deb tar.gz"
   },
   "author": "Pharuxtan",
   "license": "MIT",
   "dependencies": {
+    "child_process": "^1.0.2",
     "decompress-zip": "^0.2.2",
     "ejs-electron": "^2.0.3",
     "fs": "0.0.1-security",
