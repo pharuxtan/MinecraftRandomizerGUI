@@ -5,7 +5,8 @@
     </head>
     <body>
         <div class="randomizer"></div>
-        <h4 style="position: absolute;bottom: 0;left: 0;">by Pharuxtan</h4>
+        <h4 style="position: absolute; bottom: 0; left: 0;">by Pharuxtan</h4>
+        <button type="button" onclick="credits()" style="position: absolute; bottom: 0; left: 0;">Credits</button>
     </body>
     <script>window.$ = window.jQuery = require("./jquery-3.4.1.min.js")</script>
     <script>
@@ -19,9 +20,10 @@
       const sysRoot = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME);
       const workingPath = path.join(sysRoot, '.minecraft');
       const temp = require('temp-dir');
+      const url = require("url");
       const {getCurrentWindow} = require('electron').remote;
 
-      $("div.text").replaceWith('<div class="text" style="text-align: center">Loading...</div>');
+      $("div.text").replaceWith('<div class="text" style="text-align: center; position: relative; top: 50%; transform: translateY(-50%);">Loading...</div>');
 
       window._getFiles = function (dir, files_) {
           files_ = files_ || [];
@@ -259,6 +261,14 @@
 
       function reload() {
         getCurrentWindow().reload();
+      }
+
+      function credits() {
+        getCurrentWindow().loadURL(url.format({
+            pathname: path.join(__dirname, 'credits.html'),
+            protocol: 'file:',
+            slashes: true
+        }));
       }
     </script>
 </html>
