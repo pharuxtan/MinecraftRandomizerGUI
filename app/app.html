@@ -133,8 +133,18 @@
             let datapack_filename = documents + "\\mcrandomizer\\" + datapack_name + '.zip';
             console.log('Generating datapack...');
             console.log(`Seed: ${seed}`);
-            $("div.result").replaceWith(`<div class="result" style="text-align: center"><p>Generating datapack...</p><p>Seed: <strong>${seed}</strong></p></div>`);
+            $("div.result").replaceWith(`<div class="result" style="text-align: center"><p>Generating datapack: 0%</p><p>Seed: <strong>${seed}</strong></p></div>`);
             var zipfile = new yazl.ZipFile();
+            let fileCounter = 0;
+            let fileMax = 0;
+            if(loot){
+              if(blocks) fileMax += [].concat(_getFiles(`${extTo}\\data\\minecraft\\loot_tables\\blocks`)).length;
+              if(chests) fileMax += [].concat(_getFiles(`${extTo}\\data\\minecraft\\loot_tables\\chests`)).length;
+              if(entities) fileMax += [].concat(_getFiles(`${extTo}\\data\\minecraft\\loot_tables\\entities`)).length;
+              if(gameplay) fileMax += [].concat(_getFiles(`${extTo}\\data\\minecraft\\loot_tables\\gameplay`)).length;
+            } if(recipes){
+              fileMax += [].concat(_getFiles(`${extTo}\\data\\minecraft\\recipes`)).length;
+            }
             if(loot){
               let bfolder = `${extTo}\\data\\minecraft\\loot_tables\\blocks`;
               let cfolder = `${extTo}\\data\\minecraft\\loot_tables\\chests`;
@@ -153,6 +163,8 @@
                 remaining = remaining.filter(function(value, index, arr){return value !== file});
               }
               for(from_file in file_dict){
+                $("div.result").replaceWith(`<div class="result" style="text-align: center"><p>Generating datapack: ${Math.floor((100*fileCounter)/fileMax)}%</p><p>Seed: <strong>${seed}</strong></p><progress id="file" max="${fileMax}" value="${(fileCounter+1)}"> ${Math.floor((100*fileCounter)/fileMax)} </progress></div>`);
+                fileCounter++
                 let contents = function (){
                   let content = require(path.resolve(file_dict[from_file]));
                   if(from_file.indexOf("entities") !== -1){
@@ -180,6 +192,8 @@
                 remaining = remaining.filter(function(value, index, arr){return value !== file});
               }
               for(from_file in file_dict){
+                $("div.result").replaceWith(`<div class="result" style="text-align: center"><p>Generating datapack: ${Math.floor((100*fileCounter)/fileMax)}%</p><p>Seed: <strong>${seed}</strong></p><progress id="file" max="${fileMax}" value="${(fileCounter+1)}"> ${Math.floor((100*fileCounter)/fileMax)} </progress></div>`);
+                fileCounter++
                 let contents = function (){
                   let content = require(path.resolve(file_dict[from_file]));
                   return JSON.stringify(content, null, 2);
