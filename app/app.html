@@ -19,7 +19,7 @@
       const sysRoot = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME);
       const workingPath = path.join(sysRoot, '.minecraft');
       const temp = require('temp-dir');
-      const {shell} = require('electron');
+      const {getCurrentWindow} = require('electron').remote;
 
       $("div.text").replaceWith('<div class="text" style="text-align: center">Loading...</div>');
 
@@ -255,6 +255,10 @@
           return false;
         }
         return true;
+      }
+
+      function reload() {
+        getCurrentWindow().reload();
       }
     </script>
 </html>
