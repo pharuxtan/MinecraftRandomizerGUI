@@ -22,7 +22,6 @@
       const DecompressZip = require('decompress-zip');
       const platformFolders = require("platform-folders");
       const fetch = require("node-fetch");
-      const yauzl = require("yauzl");
       const sysRoot = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME);
       const workingPath = path.join(sysRoot, '.minecraft');
       const temp = require('temp-dir');
@@ -139,6 +138,10 @@
           return;
         }
         let mcmeta_file_list = [].concat(_getFiles(texture)).filter(n => n.endsWith(".mcmeta"));
+        for(fil in mcmeta_file_list){
+          let file = mcmeta_file_list[fil];
+          ziptext.addBuffer(fs.readFileSync(file), file.replace(/[\\]/g, "/").replace(`${extTo.replace(/[\\]/g, "/")}/`, ""));
+        }
         let file_dict = {};
         for(fil in file_list){
           let file = file_list[fil];
@@ -147,9 +150,6 @@
           remaining = remaining.filter(function(value, index, arr){return value !== file});
         }
         for(from_file in file_dict){
-          if(mcmeta_file_list.includes(from_file+".mcmeta")){
-            ziptext.addBuffer(fs.readFileSync(from_file+".mcmeta"), file_dict[from_file].replace(/[\\]/g, "/").replace(`${extTo.replace(/[\\]/g, "/")}/`, "")+".mcmeta");
-          }
           ziptext.addBuffer(fs.readFileSync(file_dict[from_file]), from_file.replace(/[\\]/g, "/").replace(`${extTo.replace(/[\\]/g, "/")}/`, ""));
         }
       }
