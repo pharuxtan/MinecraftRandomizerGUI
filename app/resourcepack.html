@@ -1,0 +1,404 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>Minecraft Randomizer</title>
+    </head>
+    <body>
+      <button type="button" onclick="returntoh()" style="position: absolute; bottom: 0; right: 0;">Home</button>
+        <h1 style="text-align: center">Minecraft Randomizer GUI</h1>
+        <div class="randomizer">
+          <div class="select"></div>
+          <div class="sel"></div>
+        </div>
+        <h4 style="position: absolute; bottom: 0; left: 0;">by Pharuxtan</h4>
+        <button type="button" onclick="credits()" style="position: absolute; bottom: 0; left: 0;">Credits</button>
+    </body>
+    <script>window.$ = window.jQuery = require("./jquery-3.4.1.min.js")</script>
+    <script>
+      const fs = require("fs");
+      const path = require("path");
+      const random = require('random');
+      const yazl = require("yazl");
+      const DecompressZip = require('decompress-zip');
+      const platformFolders = require("platform-folders");
+      const fetch = require("node-fetch");
+      const yauzl = require("yauzl");
+      const sysRoot = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME);
+      const workingPath = path.join(sysRoot, '.minecraft');
+      const temp = require('temp-dir');
+      const url = require("url");
+      const {getCurrentWindow, dialog} = require('electron').remote;
+      let select = "start";
+      let zipfile = "";
+      let zipstarted = false;
+      let ziptext;
+      let extTo,textures,extracted,randomize,error,isJar,ver;
+
+      window._getFiles = function (dir, files_) {
+          files_ = files_ || [];
+          if(fs.existsSync(dir)) {
+            try{
+              var files = fs.readdirSync(dir);
+              for(var i in files) {
+                  var name = dir + '/' + files[i];
+                  if(fs.statSync(name).isDirectory()) {
+                      _getFiles(name, files_);
+                  } else {
+                      files_.push(name);
+                  }
+              }
+            }catch(e){
+              error = true;
+              return [];
+            }
+          }
+          return files_;
+      }
+
+      window._getVersions = function (dir, versions) {
+          versions = versions || [];
+          if(fs.existsSync(dir)) {
+              var folders = fs.readdirSync(dir);
+              for(var i in folders) {
+                  versions.push(folders[i]);
+              }
+          }
+          return versions;
+      }
+
+      zip();
+
+      async function zip(){
+        if(select == "zip" || randomize) return;
+        isJar = false;
+        extracted = false;
+        console.log("zip");
+        $("div.select").replaceWith('<div class="select" style="text-align: center;"><a onClick="zip();" style="border: 2px solid darkgrey; cursor: pointer; cursor: hand;">Zip File</a> <a onClick="mcver();" style="border: 2px solid white; cursor: pointer; cursor: hand;">Minecraft Version</a></div>');
+        select = "zip";
+        $("div.sel").replaceWith(`<div class="sel" style="text-align: center"><p>Select your texture pack zip file</p><div><textarea rows="1" cols="35" id="file" disabled></textarea><button type="button" onclick="selectzip()">Browse</button></div><br><div class="extbut">\u2009</div></div>`);
+      }
+
+      async function mcver(){
+        if(select == "mcver" || randomize) return;
+        isJar = true;
+        extracted = false;
+        console.log("mcver");
+        $("div.select").replaceWith('<div class="select" style="text-align: center;"><a onClick="zip();" style="border: 2px solid white; cursor: pointer; cursor: hand;">Zip File</a> <a onClick="mcver();" style="border: 2px solid darkgrey; cursor: pointer; cursor: hand;">Minecraft Version</a></div>');
+        select = "mcver";
+        if(!fs.existsSync(workingPath)){
+          $("div.sel").replaceWith('<div class="sel" style="text-align: center; position: relative; top: 50%; transform: translateY(-50%);">the .minecraft folder doesn\'t exist<br><br><button type="button" onclick="reload()">Retry</button></div>');
+        } else {
+          if(!fs.existsSync(workingPath)){
+            $("div.sel").replaceWith('<div class="sel" style="text-align: center; position: relative; top: 50%; transform: translateY(-50%);">the .minecraft/versions folder doesn\'t exist<br><br><button type="button" onclick="reload()">Retry</button></div>');
+          } else {
+            let select = '<select id="version" size="5">';
+            let mcversions = _getVersions(`${workingPath}/versions`);
+            mcversions = mcversions.filter(ver => {
+              if(fs.existsSync(`${workingPath}\\versions\\${ver}\\${ver}.jar`)){
+                return true
+              } else {
+                return false
+              }
+            });
+            let versions = await fetch("https://launchermeta.mojang.com/mc/game/version_manifest.json").then(res => res.json()).then(js => js.versions);
+            versions = versions.map(n => n.id);
+            let check = [];
+            let selected = " selected";
+            for(var i in versions){
+              let version = versions[i];
+              mcversions.map(ver => {
+                if(ver === version){
+                  check.push(version);
+                  select += `<option value="${version}"${selected}>${version}</option>`;
+                  selected = "";
+                }
+              });
+            }
+            select += "</select>";
+            if(check[0] === undefined){
+              $("div.sel").replaceWith('<div class="sel" style="text-align: center; position: relative; top: 50%; transform: translateY(-50%);">No minecraft versions do you have is comptible, please install an official version of minecraft<br><br><button type="button" onclick="reload()">Retry</button></div>');
+            } else {
+              $("div.sel").replaceWith(`<div class="sel" style="text-align: center"><p>Select a version</p>${select}<p><button type="button" onclick="extract('jar')">Extract</button><br><div class="extract" style="text-align: center">\u2009</div></div>`);
+              /*$("div.sel").replaceWith(`<div class="sel" style="text-align: center"><p>Select a version</p>${select}<p>Select what do you want to randomize</p><input type="checkbox" name="random" value="blocks" checked/>Blocks  <input type="checkbox" name="random" value="chests" checked/>Chests  <input type="checkbox" name="random" value="entities" checked/>Entities  <input type="checkbox" name="random" value="gameplay" checked/>Gameplay  <input type="checkbox" name="random" value="recipes" />Recipes<p>Seed</p><textarea rows="1" cols="15" id="seed" onkeypress="return isNumber(event);"></textarea></br></br><button type="button" onclick="randomizer()">Randomize!</button><br><div class="result" style="text-align: center"><p>\u2009<p></div></div>`);*/
+            }
+          }
+        }
+      }
+
+      function chunks(array, chunkSize) {
+        var R = [];
+        for (var i = 0; i < array.length; i += chunkSize)
+          R.push(array.slice(i, i + chunkSize));
+        return R;
+      }
+
+      function generating(name){
+        let texture = extTo+"\\assets\\minecraft\\textures\\"+name;
+        let file_list = remaining = [].concat(_getFiles(texture)).filter(n => n.endsWith(".png"));
+        if(error){
+          return;
+        }
+        let mcmeta_file_list = [].concat(_getFiles(texture)).filter(n => n.endsWith(".mcmeta"));
+        let file_dict = {};
+        for(fil in file_list){
+          let file = file_list[fil];
+          let i = random.int(min = 0, max = (remaining.length-1));
+          file_dict[file] = remaining[i].replace(/[\\]/g, "/");
+          remaining = remaining.filter(function(value, index, arr){return value !== file});
+        }
+        for(from_file in file_dict){
+          if(mcmeta_file_list.includes(from_file+".mcmeta")){
+            ziptext.addBuffer(fs.readFileSync(from_file+".mcmeta"), file_dict[from_file].replace(/[\\]/g, "/").replace(`${extTo.replace(/[\\]/g, "/")}/`, "")+".mcmeta");
+          }
+          ziptext.addBuffer(fs.readFileSync(file_dict[from_file]), from_file.replace(/[\\]/g, "/").replace(`${extTo.replace(/[\\]/g, "/")}/`, ""));
+        }
+      }
+
+      function generatingreal(name){
+        let texture = extTo+"\\assets\\minecraft\\textures\\"+name;
+        let file_list = [].concat(_getFiles(texture));
+        for(fil in file_list){
+          let file = file_list[fil];
+          ziptext.addBuffer(fs.readFileSync(file), file.replace(/[\\]/g, "/").replace(`${extTo.replace(/[\\]/g, "/")}/`, ""));
+        }
+      }
+
+      async function randomizer(){
+        randomize = true
+        let result = $('input[type="checkbox"]:checked');
+        let seed = ($('#seed').val() === "") ? Math.floor(Math.random() * 9999999999999)+1 : (isNaN(parseInt($('#seed').val()))) ? Math.floor(Math.random() * 9999999999999)+1 : $('#seed').val();
+        if(result.length == 0){
+          $("div.result").replaceWith(`<div class="result" style="text-align: center"><p>Please check one of the boxes<p></div>`);
+        } else {
+          let documents = platformFolders.getDocumentsFolder();
+          let results = [];
+          let realresults = textures;
+          result.each(function () {
+            results.push($(this).val());
+          });
+          results = Array.from(new Set(results));
+          for(i in results){
+            let resul = results[i];
+            realresults = realresults.filter(n => n !== resul);
+          }
+          let datapack_name
+          if(isJar){
+            datapack_name = `${ver}_random_${seed}`;
+          } else {
+            datapack_name = `${zipfile.replace(".zip", "").split(/[\\]/g).slice(-1)[0]}_random_${seed}`;
+          }
+          let datapack_desc = `, Resource Pack Randomizer, Seed: ${seed}`;
+          random.use(seed);
+          let datapack_filename = documents + "\\mcrandomizer\\" + datapack_name + '.zip';
+          ziptext = new yazl.ZipFile();
+          let mcmeta;
+          if(isJar){
+            let versions = await fetch("https://launchermeta.mojang.com/mc/game/version_manifest.json").then(res => res.json()).then(js => js.versions);
+            let four,three,two,len,num;
+            four = versions.map(n => n.id).join("\u2024");
+            len = four.indexOf("17w43a")+"17w43a".length;
+            four = four.substring(0, len).split("\u2024");
+            three = versions.map(n => n.id).join("\u2024");
+            len = three.indexOf("16w32a")+"16w32a".length;
+            three = three.substring(four.join("\u2024").length+1, len).split("\u2024");
+            two = versions.map(n => n.id).join("\u2024");
+            len = two.indexOf("15w49b")+"15w49b".length;
+            two = two.substring(four.join("\u2024").length+1+three.join("\u2024").length+1, len).split("\u2024");
+            if(four.includes(ver)){
+              num = 4
+            } else if(three.includes(ver)){
+              num = 3
+            } else if(two.includes(ver)){
+              num = 2
+            } else {
+              num = 1
+            }
+            mcmeta = {"pack":{"pack_format":num, "description":`${ver}`}}
+          } else {
+            mcmeta = JSON.parse(fs.readFileSync(extTo+"\\pack.mcmeta", {encoding: 'utf8'}));
+            if(fs.existsSync(extTo+"\\pack.png")){
+              ziptext.addBuffer(fs.readFileSync(extTo+"\\pack.png"), "pack.png");
+            }
+          }
+          mcmeta.pack.description = `${mcmeta.pack.description} recreate with ${datapack_desc}`;
+          ziptext.addBuffer(Buffer.from(JSON.stringify(mcmeta, null, 4)), "pack.mcmeta");
+          $("div.result").replaceWith(`<div class="result" style="text-align: center"><p>Generating Texture Pack</p><p>Seed: <strong>${seed}</strong></p></div>`);
+          for(t in results){
+            generating(results[t]);
+          } for(t in realresults){
+            generatingreal(realresults[t]);
+          }
+          if(error){
+            $("textarea#file").val("");
+            $("div.extbut").replaceWith(`<div class="extbut"><p>The Zip probably contain a Thumbs.db<p></div>`);
+            ziptext = undefined;
+            error = false;
+            return;
+          }
+          if(!fs.existsSync(documents+"/mcrandomizer")){
+            fs.mkdirSync(documents+"/mcrandomizer",{recursive: true})
+          }
+          ziptext.outputStream.pipe(fs.createWriteStream(datapack_filename)).on("close", function() {
+            console.log(`Created Texture Pack "${datapack_filename}"`);
+            $("div.result").replaceWith(`<div class="result" style="text-align: center"><p>Created Texture Pack in "${datapack_filename}"</p><p>Seed: <strong>${seed}</strong></p><button type="button" onclick="openpath('${datapack_filename.replace(/[\\]/g, "/")}', 'select');">Open in explorer</button><br><button type="button" onclick="openpath('${workingPath.replace(/[\\]/g, "/")}/resourcepacks', 'n');">Open resourcepacks folder in explorer</button></div>`);
+          }).on("error", function(err) {
+            console.log(`The file "${datapack_filename}" can't be written because the file is used by another process`);
+            $("div.result").replaceWith(`<div class="result" style="text-align: center"><p>The file "${datapack_filename}" can't be written because the file is used by another process</p></div>`);
+          });
+          ziptext.end();
+        }
+        extracted = false;
+        randomize = false;
+      }
+
+      async function selecter(sel){
+        extracted = true;
+        if(sel === "zip"){
+          if(!fs.existsSync(extTo+"\\assets")){
+            $("textarea#file").val("The Zip file is not a texture pack");
+            $("div.extbut").replaceWith(`<div class="extbut">\u2009</div>`);
+            return;
+          } else if(!fs.existsSync(extTo+"\\assets\\minecraft\\textures")){
+            $("textarea#file").val("The Zip file is not a texture pack");
+            $("div.extbut").replaceWith(`<div class="extbut">\u2009</div>`);
+            return;
+          }
+        }
+        textures = _getVersions(extTo+"\\assets\\minecraft\\textures");
+        let inputs = [];
+        let one = " checked";
+        textures.map(folder => {
+          inputs.push(`<input type="checkbox" name="random" value="${folder}"${one}/>${folder.substring(0,1).toUpperCase()}${folder.substring(1,folder.length)}`);
+          one = "";
+        });
+        inputs = chunks(inputs, 5);
+        let html = [];
+        for(i in inputs){
+          let input = inputs[i];
+          for(a in input){
+            html.push(input[a]);
+          }
+          html.push("<br>");
+        }
+        html = html.join("");
+        $("div.extract").replaceWith(`<div class="extract" style="text-align: center"><p>Select what do you want to randomize<p>${html}<p>Seed</p><textarea rows="1" cols="15" id="seed" onkeypress="return isNumber(event);"></textarea></textarea></br></br><button type="button" onclick="randomizer()">Randomize!</button><div class="result" style="text-align: center"><p>\u2009<p></div></div>`);
+      }
+
+      async function extract(file){
+        if(extracted) return;
+        if(file === "jar"){
+          ver = $("#version option:selected" ).text();
+          extTo = path.normalize(temp + `\\mcrandomizer\\${ver}`);
+          if(fs.existsSync(extTo)){
+            selecter("jar", extTo);
+          } else {
+            $("div.extract").replaceWith(`<div class="extract" style="text-align: center"><p>Decompressing Minecraft ${ver} JAR<p></div>`);
+            let jar = `${workingPath}\\versions\\${ver}\\${ver}.jar`;
+            let unzipper = new DecompressZip(jar);
+            unzipper.on('error', function (err) {throw err});
+            unzipper.on('extract', function (log) {
+              $("div.extract").replaceWith(`<div class="extract" style="text-align: center"><p>Extract finish<p></div>`);
+              console.log("Extract finish");
+              selecter("jar", extTo);
+            });
+            unzipper.on('progress', function (fileIndex, fileCount) {
+              var perc = Math.floor(((fileIndex+1)*100)/fileCount);
+              console.log(`Extracted file ${(fileIndex + 1)} of ${fileCount} ${perc}%`)
+              $("div.extract").replaceWith(`<div class="extract" style="text-align: center"><p>Extracted file ${(fileIndex+1)} of ${fileCount} ${perc}%<p><progress id="file" max="${fileCount}" value="${(fileIndex+1)}"> ${perc} </progress></div>`);
+            });
+            unzipper.extract({
+              path: extTo,
+              filter: function (file) {
+                return file.type !== "SymbolicLink";
+              }
+            });
+          }
+        } else {
+          extTo = path.normalize(temp + `\\mcrandomizer\\texturepack\\${zipfile.replace(".zip", "").split(/[\\]/g).slice(-1)[0]}`);
+          if(fs.existsSync(extTo)){
+            selecter("zip", extTo);
+          } else {
+            $("div.extract").replaceWith(`<div class="extract" style="text-align: center"><p>Decompressing ${zipfile.split(/[\\]/g).slice(-1)[0]}<p></div>`);
+            let unzipper = new DecompressZip(zipfile);
+            unzipper.on('error', function (err) {throw err});
+            unzipper.on('extract', function (log) {
+              $("div.extract").replaceWith(`<div class="extract" style="text-align: center"><p>Extract finish<p></div>`);
+              console.log("Extract finish");
+              selecter("zip", extTo);
+            });
+            unzipper.on('progress', function (fileIndex, fileCount) {
+              var perc = Math.floor(((fileIndex+1)*100)/fileCount);
+              console.log(`Extracted file ${(fileIndex + 1)} of ${fileCount} ${perc}%`)
+              $("div.extract").replaceWith(`<div class="extract" style="text-align: center"><p>Extracted file ${(fileIndex+1)} of ${fileCount} ${perc}%<p><progress id="file" max="${fileCount}" value="${(fileIndex+1)}"> ${perc} </progress></div>`);
+            });
+            unzipper.extract({
+              path: extTo,
+              filter: function (file) {
+                return file.type !== "SymbolicLink";
+              }
+            });
+          }
+        }
+      }
+
+      async function openpath(fpath, arg){
+        let command = '';
+        fpath = fpath.replace(/[\/]/g, "\\");
+        switch (process.platform) {
+          case 'darwin':
+            command = 'open -R ' + fpath;
+            break;
+          case 'win32':
+            if (process.env.SystemRoot) {
+              command = process.env.SystemRoot+'\\explorer.exe';
+            } else {
+              command = 'explorer.exe';
+            }
+            command += ' /'+arg+',' + fpath;
+            break;
+          default:
+            fpath = path.dirname(fpath)
+            command = 'xdg-open ' + fpath;
+        }
+        require("child_process").exec(command, function(stdout) {});
+      }
+
+      async function selectzip(){
+        if(zipstarted) return $("textarea#file").val("You can't do that because you have started the creating processus");;
+        zipfile = await dialog.showOpenDialog({defaultPath: `${workingPath}\\resourcepacks`, filters: [{name: "*", extensions: ["zip"]}], properties: ['openFile']});
+        zipfile = zipfile.filePaths[0];
+        if(zipfile === undefined || !zipfile.endsWith(".zip")){
+          $("textarea#file").val("Please select a zip file !");
+        } else {
+          $("textarea#file").val(zipfile);
+          $("div.extbut").replaceWith(`<div class="extbut"><button type="button" onclick="extract('zip')">Extract</button><br><div class="extract" style="text-align: center"><p>\u2009<p></div></div>`);
+          extracted = false;
+        }
+      }
+
+      function isNumber(evt) {
+        evt = (evt) ? evt : window.event;
+        var charCode = (evt.which) ? evt.which : evt.keyCode;
+        if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+          return false;
+        }
+        return true;
+      }
+
+      function credits() {
+        getCurrentWindow().loadURL(url.format({
+            pathname: path.join(__dirname, 'credits.html'),
+            protocol: 'file:',
+            slashes: true
+        }));
+      }
+
+      function returntoh() {
+        getCurrentWindow().loadURL(url.format({
+            pathname: path.join(__dirname, 'app.html'),
+            protocol: 'file:',
+            slashes: true
+        }));
+      }
+    </script>
+</html>

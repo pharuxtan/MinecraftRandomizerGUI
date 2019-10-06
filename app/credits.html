@@ -5,12 +5,13 @@
     </head>
     <body>
       <button type="button" onclick="returntoh()" style="position: absolute; bottom: 0; left: 0;">Home</button>
+      <button type="button" onclick="resourcepack()" style="position: absolute; bottom: 0; right: 0;">Texture Pack Randomizer</button>
       <h1 style="text-align: center">Minecraft Randomizer GUI</h1>
       <div style="text-align: center; position: relative; top: 35%; transform: translateY(-50%);">
         <p>Loot Table Randomizer originally created by <a onClick="openurl('https://www.youtube.com/watch?v=3JEXAZOrykQ');" style="color: blue; cursor: pointer; cursor: hand;">SethBling</a></p>
         <p>The Source of the app is <a onClick="openurl('https://github.com/Pharuxtan/MinecraftRandomizerGUI');" style="color: blue; cursor: pointer; cursor: hand;">here</a></p>
       </div>
-      <p style="position: absolute; bottom: 0; right: 10%">Minecraft © Mojang 2009 - 2019. I am not affiliated with Mojang or SethBling in any way.</p>
+      <p style="position: absolute; bottom: 2.5%; right: 10%">Minecraft © Mojang 2009 - 2019. I am not affiliated with Mojang or SethBling in any way.</p>
     </body>
     <script>
       const url = require("url");
@@ -28,6 +29,14 @@
 
       function openurl(url) {
         shell.openExternal(url);
+      }
+
+      function resourcepack() {
+        getCurrentWindow().loadURL(url.format({
+            pathname: path.join(__dirname, 'resourcepack.html'),
+            protocol: 'file:',
+            slashes: true
+        }));
       }
     </script>
   </html>

@@ -1,4 +1,4 @@
-<html>
+  <html>
     <head>
         <meta charset="utf-8"/>
         <title>Minecraft Randomizer</title>
@@ -8,6 +8,7 @@
         <div class="randomizer"></div>
         <h4 style="position: absolute; bottom: 0; left: 0;">by Pharuxtan</h4>
         <button type="button" onclick="credits()" style="position: absolute; bottom: 0; left: 0;">Credits</button>
+        <button type="button" onclick="resourcepack()" style="position: absolute; bottom: 0; right: 0;">Texture Pack Randomizer</button>
     </body>
     <script>window.$ = window.jQuery = require("./jquery-3.4.1.min.js")</script>
     <script>
@@ -24,7 +25,7 @@
       const url = require("url");
       const {getCurrentWindow} = require('electron').remote;
 
-      $("div.text").replaceWith('<div class="text" style="text-align: center; position: relative; top: 50%; transform: translateY(-50%);">Loading...</div>');
+      $("div.randomizer").replaceWith('<div class="randomizer" style="text-align: center; position: relative; top: 50%; transform: translateY(-50%);">Loading...</div>');
 
       window._getFiles = function (dir, files_) {
           files_ = files_ || [];
@@ -61,7 +62,7 @@
           if(!fs.existsSync(workingPath)){
             $("div.randomizer").replaceWith('<div class="randomizer" style="text-align: center; position: relative; top: 50%; transform: translateY(-50%);">the .minecraft/versions folder doesn\'t exist<br><br><button type="button" onclick="reload()">Retry</button></div>');
           } else {
-            let select = '<select id="version">';
+            let select = '<select id="version" size="5">';
             let mcversions = _getVersions(`${workingPath}/versions`);
             mcversions = mcversions.filter(ver => {
               if(fs.existsSync(`${workingPath}\\versions\\${ver}\\${ver}.jar`)){
@@ -75,12 +76,14 @@
             let len = versions.indexOf("17w43a")+"17w43a".length;
             versions = versions.substring(0, len).split("\u2024");
             let check = [];
+            let selected = " selected";
             for(var i in versions){
               let version = versions[i];
               mcversions.map(ver => {
                 if(ver === version){
                   check.push(version);
-                  select += `<option value="${version}">${version}</option>`;
+                  select += `<option value="${version}"${selected}>${version}</option>`;
+                  selected = "";
                 }
               });
             }
@@ -110,10 +113,6 @@
           let entities = (results.includes("entities")) ? true : false;
           let gameplay = (results.includes("gameplay")) ? true : false;
           let loot;
-          console.log(blocks);
-          console.log(chests);
-          console.log(entities);
-          console.log(gameplay);
           if(blocks || chests || entities || gameplay){
             loot = true
           } else {
@@ -281,6 +280,14 @@
       function credits() {
         getCurrentWindow().loadURL(url.format({
             pathname: path.join(__dirname, 'credits.html'),
+            protocol: 'file:',
+            slashes: true
+        }));
+      }
+
+      function resourcepack() {
+        getCurrentWindow().loadURL(url.format({
+            pathname: path.join(__dirname, 'resourcepack.html'),
             protocol: 'file:',
             slashes: true
         }));
