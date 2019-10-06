@@ -195,7 +195,7 @@
             }
             zipfile.outputStream.pipe(fs.createWriteStream(datapack_filename)).on("close", function() {
               console.log(`Created datapack "${datapack_filename}"`);
-              $("div.result").replaceWith(`<div class="result" style="text-align: center"><p>Created datapack in "${datapack_filename}"</p><p>Seed: <strong>${seed}</strong></p><button type="button" onclick="openpath('${datapack_filename.replace(/[\\]/g, "/")}');">Open in explorer</button><br><button type="button" onclick="openpath('${workingPath.replace(/[\\]/g, "/")}/saves/${_getVersions(workingPath+"\\saves\\")[0]}');">Open saves folder in explorer</button></div>`);
+              $("div.result").replaceWith(`<div class="result" style="text-align: center"><p>Created datapack in "${datapack_filename}"</p><p>Seed: <strong>${seed}</strong></p><button type="button" onclick="openpath('${datapack_filename.replace(/[\\]/g, "/")}', 'select');">Open in explorer</button><br><button type="button" onclick="openpath('${workingPath.replace(/[\\]/g, "/")}/saves', 'n');">Open saves folder in explorer</button></div>`);
             }).on("error", function(err) {
               console.log(`The file "${datapack_filename}" can't be written because the file is used by another process`);
               $("div.result").replaceWith(`<div class="result" style="text-align: center"><p>The file "${datapack_filename}" can't be written because the file is used by another process</p></div>`);
@@ -228,7 +228,7 @@
         };
       }
 
-      async function openpath(fpath){
+      async function openpath(fpath, arg){
         let command = '';
         fpath = fpath.replace(/[\/]/g, "\\");
         switch (process.platform) {
@@ -241,7 +241,7 @@
             } else {
               command = 'explorer.exe';
             }
-            command += ' /select,' + fpath;
+            command += ' /'+arg+',' + fpath;
             break;
           default:
             fpath = path.dirname(fpath)
