@@ -87,7 +87,7 @@
             if(check[0] === undefined){
               $("div.text").replaceWith('<div class="text" style="text-align: center">No minecraft versions do you have is comptible, please install <strong>17w43a</strong> or later</div>');
             } else {
-              $("div.text").replaceWith(`<div class="text" style="text-align: center"><h1>Minecraft Randomizer GUI</h1><p>Select a version</p>${select}<p>Select what do you want to randomize</p><input type="checkbox" name="random" value="blocks" checked/>Blocks  <input type="checkbox" name="random" value="chests" checked/>Chests  <input type="checkbox" name="random" value="entities" checked/>Entities  <input type="checkbox" name="random" value="gameplay" checked/>Gameplay  <input type="checkbox" name="random" value="recipes" />Recipes<p>Seed</p><textarea rows="1" cols="15" id="seed"></textarea></br></br><button type="button" onclick="randomizer()">Randomize!</button><br><div class="result" style="text-align: center"><p>\u2009<p></div></div>`);
+              $("div.text").replaceWith(`<div class="text" style="text-align: center"><h1>Minecraft Randomizer GUI</h1><p>Select a version</p>${select}<p>Select what do you want to randomize</p><input type="checkbox" name="random" value="blocks" checked/>Blocks  <input type="checkbox" name="random" value="chests" checked/>Chests  <input type="checkbox" name="random" value="entities" checked/>Entities  <input type="checkbox" name="random" value="gameplay" checked/>Gameplay  <input type="checkbox" name="random" value="recipes" />Recipes<p>Seed</p><textarea rows="1" cols="15" id="seed" onkeypress="return isNumber(event);"></textarea></br></br><button type="button" onclick="randomizer()">Randomize!</button><br><div class="result" style="text-align: center"><p>\u2009<p></div></div>`);
             }
           }
         })();
@@ -248,6 +248,15 @@
             command = 'xdg-open ' + fpath;
         }
         require("child_process").exec(command, function(stdout) {});
+      }
+
+      function isNumber(evt) {
+        evt = (evt) ? evt : window.event;
+        var charCode = (evt.which) ? evt.which : evt.keyCode;
+        if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+          return false;
+        }
+        return true;
       }
     </script>
 </html>
