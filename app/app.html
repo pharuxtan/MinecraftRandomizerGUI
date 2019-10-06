@@ -4,9 +4,7 @@
         <title>Minecraft Randomizer</title>
     </head>
     <body>
-        <div class="randomizer">
-          <div class="text"></div>
-        </div>
+        <div class="randomizer"></div>
         <h4 style="position: absolute;bottom: 0;left: 0;">by Pharuxtan</h4>
     </body>
     <script>window.$ = window.jQuery = require("./jquery-3.4.1.min.js")</script>
@@ -54,11 +52,11 @@
       }
 
       if(!fs.existsSync(workingPath)){
-        $("div.text").replaceWith('<div class="text" style="text-align: center">the .minecraft folder doesn\'t exist</div>');
+        $("div.randomizer").replaceWith('<div class="randomizer" style="text-align: center; position: relative; top: 50%; transform: translateY(-50%);">the .minecraft folder doesn\'t exist<br><br><button type="button" onclick="reload()">Retry</button></div>');
       } else {
         (async () => {
           if(!fs.existsSync(workingPath)){
-            $("div.text").replaceWith('<div class="text" style="text-align: center">the .minecraft/versions folder doesn\'t exist</div>');
+            $("div.randomizer").replaceWith('<div class="randomizer" style="text-align: center; position: relative; top: 50%; transform: translateY(-50%);">the .minecraft/versions folder doesn\'t exist<br><br><button type="button" onclick="reload()">Retry</button></div>');
           } else {
             let select = '<select id="version">';
             let mcversions = _getVersions(`${workingPath}/versions`);
@@ -85,9 +83,9 @@
             }
             select += "</select>";
             if(check[0] === undefined){
-              $("div.text").replaceWith('<div class="text" style="text-align: center">No minecraft versions do you have is comptible, please install <strong>17w43a</strong> or later</div>');
+              $("div.randomizer").replaceWith('<div class="randomizer" style="text-align: center; position: relative; top: 50%; transform: translateY(-50%);">No minecraft versions do you have is comptible, please install <strong>17w43a</strong> or later<br><br><button type="button" onclick="reload()">Retry</button></div>');
             } else {
-              $("div.text").replaceWith(`<div class="text" style="text-align: center"><h1>Minecraft Randomizer GUI</h1><p>Select a version</p>${select}<p>Select what do you want to randomize</p><input type="checkbox" name="random" value="blocks" checked/>Blocks  <input type="checkbox" name="random" value="chests" checked/>Chests  <input type="checkbox" name="random" value="entities" checked/>Entities  <input type="checkbox" name="random" value="gameplay" checked/>Gameplay  <input type="checkbox" name="random" value="recipes" />Recipes<p>Seed</p><textarea rows="1" cols="15" id="seed" onkeypress="return isNumber(event);"></textarea></br></br><button type="button" onclick="randomizer()">Randomize!</button><br><div class="result" style="text-align: center"><p>\u2009<p></div></div>`);
+              $("div.randomizer").replaceWith(`<div class="randomizer" style="text-align: center"><h1>Minecraft Randomizer GUI</h1><p>Select a version</p>${select}<p>Select what do you want to randomize</p><input type="checkbox" name="random" value="blocks" checked/>Blocks  <input type="checkbox" name="random" value="chests" checked/>Chests  <input type="checkbox" name="random" value="entities" checked/>Entities  <input type="checkbox" name="random" value="gameplay" checked/>Gameplay  <input type="checkbox" name="random" value="recipes" />Recipes<p>Seed</p><textarea rows="1" cols="15" id="seed" onkeypress="return isNumber(event);"></textarea></br></br><button type="button" onclick="randomizer()">Randomize!</button><br><div class="result" style="text-align: center"><p>\u2009<p></div></div>`);
             }
           }
         })();
