@@ -4,6 +4,7 @@
         <title>Minecraft Randomizer</title>
     </head>
     <body>
+        <h1 style="text-align: center">Minecraft Randomizer GUI</h1>
         <div class="randomizer"></div>
         <h4 style="position: absolute; bottom: 0; left: 0;">by Pharuxtan</h4>
         <button type="button" onclick="credits()" style="position: absolute; bottom: 0; left: 0;">Credits</button>
@@ -87,7 +88,7 @@
             if(check[0] === undefined){
               $("div.randomizer").replaceWith('<div class="randomizer" style="text-align: center; position: relative; top: 50%; transform: translateY(-50%);">No minecraft versions do you have is comptible, please install <strong>17w43a</strong> or later<br><br><button type="button" onclick="reload()">Retry</button></div>');
             } else {
-              $("div.randomizer").replaceWith(`<div class="randomizer" style="text-align: center"><h1>Minecraft Randomizer GUI</h1><p>Select a version</p>${select}<p>Select what do you want to randomize</p><input type="checkbox" name="random" value="blocks" checked/>Blocks  <input type="checkbox" name="random" value="chests" checked/>Chests  <input type="checkbox" name="random" value="entities" checked/>Entities  <input type="checkbox" name="random" value="gameplay" checked/>Gameplay  <input type="checkbox" name="random" value="recipes" />Recipes<p>Seed</p><textarea rows="1" cols="15" id="seed" onkeypress="return isNumber(event);"></textarea></br></br><button type="button" onclick="randomizer()">Randomize!</button><br><div class="result" style="text-align: center"><p>\u2009<p></div></div>`);
+              $("div.randomizer").replaceWith(`<div class="randomizer" style="text-align: center"><p>Select a version</p>${select}<p>Select what do you want to randomize</p><input type="checkbox" name="random" value="blocks" checked/>Blocks  <input type="checkbox" name="random" value="chests" checked/>Chests  <input type="checkbox" name="random" value="entities" checked/>Entities  <input type="checkbox" name="random" value="gameplay" checked/>Gameplay  <input type="checkbox" name="random" value="recipes" />Recipes<p>Seed</p><textarea rows="1" cols="15" id="seed" onkeypress="return isNumber(event);"></textarea></br></br><button type="button" onclick="randomizer()">Randomize!</button><br><div class="result" style="text-align: center"><p>\u2009<p></div></div>`);
             }
           }
         })();
