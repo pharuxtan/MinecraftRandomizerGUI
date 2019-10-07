@@ -226,8 +226,10 @@
           $("div.result").replaceWith(`<div class="result" style="text-align: center"><p>Generating Texture Pack</p><p>Seed: <strong>${seed}</strong></p></div>`);
           for(t in results){
             generating(results[t]);
-          } for(t in realresults){
-            generatingreal(realresults[t]);
+          } if(!isJar){
+            for(t in realresults){
+              generatingreal(realresults[t]);
+            }
           }
           if(error){
             $("textarea#file").val("");
