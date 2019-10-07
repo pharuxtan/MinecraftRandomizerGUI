@@ -5,6 +5,7 @@
     </head>
     <body>
       <button type="button" onclick="returntoh()" style="position: absolute; bottom: 0; right: 0;">Home</button>
+      <button type="button" onclick="options()" style="position: absolute; bottom: 0; left: 10%;">Options</button>
         <h1 style="text-align: center">Minecraft Randomizer GUI</h1>
         <div class="randomizer">
           <div class="select"></div>
@@ -15,7 +16,7 @@
     </body>
     <script>window.$ = window.jQuery = require("./jquery-3.4.1.min.js")</script>
     <script>
-      const fs = require("fs");
+      const fs = require("fs-extra");
       const path = require("path");
       const random = require('random');
       const yazl = require("yazl");
@@ -23,7 +24,8 @@
       const platformFolders = require("platform-folders");
       const fetch = require("node-fetch");
       const sysRoot = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME);
-      const workingPath = path.join(sysRoot, '.minecraft');
+      const Options = require('./options.js');
+      const workingPath = Options.getMinecraftFolder();
       const temp = require('temp-dir');
       const url = require("url");
       const {getCurrentWindow, dialog} = require('electron').remote;
@@ -85,10 +87,10 @@
         $("div.select").replaceWith('<div class="select" style="text-align: center;"><a onClick="zip();" style="border: 2px solid white; cursor: pointer; cursor: hand;">Zip File</a> <a onClick="mcver();" style="border: 2px solid darkgrey; cursor: pointer; cursor: hand;">Minecraft Version</a></div>');
         select = "mcver";
         if(!fs.existsSync(workingPath)){
-          $("div.sel").replaceWith('<div class="sel" style="text-align: center; position: relative; top: 50%; transform: translateY(-50%);">the .minecraft folder doesn\'t exist<br><br><button type="button" onclick="reload()">Retry</button></div>');
+          $("div.sel").replaceWith('<div class="sel" style="text-align: center;"><br>the .minecraft folder doesn\'t exist<br><p>If you want you can change the path of your .minecraft:</p><div><textarea rows="1" cols="75" id="mcfile" disabled></textarea><button type="button" onclick="mcselect()">Browse</button></div><br><button type="button" onclick="reload()">Retry</button></div>');
         } else {
           if(!fs.existsSync(workingPath)){
-            $("div.sel").replaceWith('<div class="sel" style="text-align: center; position: relative; top: 50%; transform: translateY(-50%);">the .minecraft/versions folder doesn\'t exist<br><br><button type="button" onclick="reload()">Retry</button></div>');
+            $("div.sel").replaceWith('<div class="sel" style="text-align: center;"><br>the .minecraft/versions folder doesn\'t exist<br><p>If you want you can change the path of your .minecraft:</p><div><textarea rows="1" cols="75" id="mcfile" disabled></textarea><button type="button" onclick="mcselect()">Browse</button></div><br><button type="button" onclick="reload()">Retry</button></div>');
           } else {
             let select = '<select id="version" size="5">';
             let mcversions = _getVersions(`${workingPath}/versions`);
@@ -115,10 +117,9 @@
             }
             select += "</select>";
             if(check[0] === undefined){
-              $("div.sel").replaceWith('<div class="sel" style="text-align: center; position: relative; top: 50%; transform: translateY(-50%);">No minecraft versions do you have is comptible, please install an official version of minecraft<br><br><button type="button" onclick="reload()">Retry</button></div>');
+              $("div.sel").replaceWith('<div class="sel" style="text-align: center;"><br>No minecraft versions do you have is comptible, please install an official version of minecraft<br><p>If you want you can change the path of your .minecraft:</p><div><textarea rows="1" cols="75" id="mcfile" disabled></textarea><button type="button" onclick="mcselect()">Browse</button></div><br><button type="button" onclick="reload()">Retry</button></div>');
             } else {
               $("div.sel").replaceWith(`<div class="sel" style="text-align: center"><p>Select a version</p>${select}<p><button type="button" onclick="extract('jar')">Extract</button><br><div class="extract" style="text-align: center">\u2009</div></div>`);
-              /*$("div.sel").replaceWith(`<div class="sel" style="text-align: center"><p>Select a version</p>${select}<p>Select what do you want to randomize</p><input type="checkbox" name="random" value="blocks" checked/>Blocks  <input type="checkbox" name="random" value="chests" checked/>Chests  <input type="checkbox" name="random" value="entities" checked/>Entities  <input type="checkbox" name="random" value="gameplay" checked/>Gameplay  <input type="checkbox" name="random" value="recipes" />Recipes<p>Seed</p><textarea rows="1" cols="15" id="seed" onkeypress="return isNumber(event);"></textarea></br></br><button type="button" onclick="randomizer()">Randomize!</button><br><div class="result" style="text-align: center"><p>\u2009<p></div></div>`);*/
             }
           }
         }
@@ -232,6 +233,7 @@
             $("textarea#file").val("");
             $("div.extbut").replaceWith(`<div class="extbut"><p>The Zip probably contain a Thumbs.db<p></div>`);
             ziptext = undefined;
+            randomize = false;
             error = false;
             return;
           }
@@ -396,6 +398,33 @@
       function returntoh() {
         getCurrentWindow().loadURL(url.format({
             pathname: path.join(__dirname, 'app.html'),
+            protocol: 'file:',
+            slashes: true
+        }));
+      }
+
+      function reload() {
+        getCurrentWindow().loadURL(url.format({
+            pathname: path.join(__dirname, 'resourcepack.html'),
+            protocol: 'file:',
+            slashes: true
+        }));
+      }
+
+      async function mcselect(){
+        let mcfile = await dialog.showOpenDialog({defaultPath: sysRoot, properties: ['openDirectory']});
+        mcfile = zipfile.filePaths[0];
+        if(mcfile === undefined){
+          $("textarea#mcfile").val("Please select your minecraft folder !");
+        } else {
+          $("textarea#mcfile").val(zipfile);
+          Options.setMinecraftFolder(zipfile)
+        }
+      }
+
+      function options() {
+        getCurrentWindow().loadURL(url.format({
+            pathname: path.join(__dirname, 'options.html'),
             protocol: 'file:',
             slashes: true
         }));

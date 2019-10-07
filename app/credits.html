@@ -5,6 +5,7 @@
     </head>
     <body>
       <button type="button" onclick="returntoh()" style="position: absolute; bottom: 0; left: 0;">Home</button>
+      <button type="button" onclick="options()" style="position: absolute; bottom: 0; left: 10%;">Options</button>
       <button type="button" onclick="resourcepack()" style="position: absolute; bottom: 0; right: 0;">Texture Pack Randomizer</button>
       <h1 style="text-align: center">Minecraft Randomizer GUI</h1>
       <div style="text-align: center; position: relative; top: 35%; transform: translateY(-50%);">
@@ -34,6 +35,14 @@
       function resourcepack() {
         getCurrentWindow().loadURL(url.format({
             pathname: path.join(__dirname, 'resourcepack.html'),
+            protocol: 'file:',
+            slashes: true
+        }));
+      }
+
+      function options() {
+        getCurrentWindow().loadURL(url.format({
+            pathname: path.join(__dirname, 'options.html'),
             protocol: 'file:',
             slashes: true
         }));

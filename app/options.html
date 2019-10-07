@@ -1,0 +1,64 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>Minecraft Randomizer</title>
+    </head>
+    <body>
+      <button type="button" onclick="credits()" style="position: absolute; bottom: 0; left: 0;">Credits</button>
+      <button type="button" onclick="returntoh()" style="position: absolute; bottom: 0; left: 10%;">Home</button>
+      <button type="button" onclick="resourcepack()" style="position: absolute; bottom: 0; right: 0;">Texture Pack Randomizer</button>
+      <h1 style="text-align: center">Minecraft Randomizer GUI</h1>
+      <div style="text-align: center; position: relative; top: 35%; transform: translateY(-50%);">
+        <p>Change the path of your .minecraft here</p>
+        <div><textarea rows="1" cols="75" id="file" disabled></textarea><button type="button" onclick="select()">Browse</button></div>
+      </div>
+    </body>
+    <script>window.$ = window.jQuery = require("./jquery-3.4.1.min.js")</script>
+    <script>
+      const url = require("url");
+      const path = require("path");
+      const Options = require('./options.js');
+      const sysRoot = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME);
+      const {getCurrentWindow, dialog} = require('electron').remote;
+      const {shell} = require('electron');
+
+      function returntoh() {
+        getCurrentWindow().loadURL(url.format({
+            pathname: path.join(__dirname, 'app.html'),
+            protocol: 'file:',
+            slashes: true
+        }));
+      }
+
+      async function select(){
+        let zipfile = await dialog.showOpenDialog({defaultPath: sysRoot, properties: ['openDirectory']});
+        zipfile = zipfile.filePaths[0];
+        if(zipfile === undefined){
+          $("textarea#file").val("Please select your minecraft folder !");
+        } else {
+          $("textarea#file").val(zipfile);
+          Options.setMinecraftFolder(zipfile)
+        }
+      }
+
+      function openurl(url) {
+        shell.openExternal(url);
+      }
+
+      function credits() {
+        getCurrentWindow().loadURL(url.format({
+            pathname: path.join(__dirname, 'credits.html'),
+            protocol: 'file:',
+            slashes: true
+        }));
+      }
+
+      function resourcepack() {
+        getCurrentWindow().loadURL(url.format({
+            pathname: path.join(__dirname, 'resourcepack.html'),
+            protocol: 'file:',
+            slashes: true
+        }));
+      }
+    </script>
+  </html>
