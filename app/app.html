@@ -167,47 +167,36 @@
                 fileCounter++
                 let contents = function (){
                   let content = require(path.resolve(file_dict[from_file]));
+                  function pools(){
+                    if(content.pools){
+                      content.pools = content.pools.map(p => {
+                        if(p.conditions){
+                          p.conditions = p.conditions.filter(c => c.condition !== "minecraft:killed_by_player");
+                          if(p.conditions.length == 0){
+                            delete p.conditions;
+                          }
+                        }
+                        p.entries = p.entries.map(e => {
+                          if(e.condition){
+                            delete e.condition
+                          }
+                          return e
+                        });
+                        return p;
+                      });
+                    }
+                  }
                   if(from_file.indexOf("entities") !== -1){
                     content.type = "minecraft:entity";
                   } else if(from_file.indexOf("blocks") !== -1){
                     content.type = "minecraft:block";
-                    if(content.pools){
-                      content.pools = content.pools.map(p => {
-                        if(p.conditions){
-                          p.conditions = p.conditions.filter(c => c.condition !== "minecraft:killed_by_player");
-                          if(p.conditions.length == 0){
-                            delete p.conditions;
-                          }
-                        }
-                        return p;
-                      });
-                    }
+                    pools();
                   } else if(from_file.indexOf("chests") !== -1){
                     content.type = "minecraft:chest";
-                    if(content.pools){
-                      content.pools = content.pools.map(p => {
-                        if(p.conditions){
-                          p.conditions = p.conditions.filter(c => c.condition !== "minecraft:killed_by_player");
-                          if(p.conditions.length == 0){
-                            delete p.conditions;
-                          }
-                        }
-                        return p;
-                      });
-                    }
+                    pools();
                   } else if(from_file.indexOf("gameplay") !== -1){
                     content.type = "minecraft:gift";
-                    if(content.pools){
-                      content.pools = content.pools.map(p => {
-                        if(p.conditions){
-                          p.conditions = p.conditions.filter(c => c.condition !== "minecraft:killed_by_player");
-                          if(p.conditions.length == 0){
-                            delete p.conditions;
-                          }
-                        }
-                        return p;
-                      });
-                    }
+                    pools();
                   }
                   return JSON.stringify(content, null, 2);
                 }
