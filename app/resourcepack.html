@@ -138,10 +138,12 @@
         if(error){
           return;
         }
-        let mcmeta_file_list = [].concat(_getFiles(texture)).filter(n => n.endsWith(".mcmeta"));
-        for(fil in mcmeta_file_list){
-          let file = mcmeta_file_list[fil];
-          ziptext.addBuffer(fs.readFileSync(file), file.replace(/[\\]/g, "/").replace(`${extTo.replace(/[\\]/g, "/")}/`, ""));
+        if(!isJar){
+          let mcmeta_file_list = [].concat(_getFiles(texture)).filter(n => n.endsWith(".mcmeta"));
+          for(fil in mcmeta_file_list){
+            let file = mcmeta_file_list[fil];
+            ziptext.addBuffer(fs.readFileSync(file), file.replace(/[\\]/g, "/").replace(`${extTo.replace(/[\\]/g, "/")}/`, ""));
+          }
         }
         let file_dict = {};
         for(fil in file_list){
