@@ -176,12 +176,6 @@
                             delete p.conditions;
                           }
                         }
-                        p.entries = p.entries.map(e => {
-                          if(e.condition){
-                            delete e.condition
-                          }
-                          return e
-                        });
                         return p;
                       });
                     }
