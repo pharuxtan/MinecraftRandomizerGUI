@@ -171,7 +171,7 @@
                     if(content.pools){
                       content.pools = content.pools.map(p => {
                         if(p.conditions){
-                          p.conditions = p.conditions.filter(c => c.condition !== "minecraft:killed_by_player");
+                          p.conditions = p.conditions.filter(c => c.condition !== "minecraft:killed_by_player" && c.condition !== "minecraft:survives_explosion");
                           if(p.conditions.length == 0){
                             delete p.conditions;
                           }
