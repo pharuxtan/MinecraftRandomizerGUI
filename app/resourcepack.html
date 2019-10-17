@@ -416,14 +416,10 @@
       }
 
       async function mcselect(){
-        let mcfile = await dialog.showOpenDialog({defaultPath: sysRoot, properties: ['openDirectory']});
-        mcfile = zipfile.filePaths[0];
-        if(mcfile === undefined){
-          $("textarea#mcfile").val("Please select your minecraft folder !");
-        } else {
-          $("textarea#mcfile").val(zipfile);
-          Options.setMinecraftFolder(zipfile)
-        }
+        let folder = await dialog.showOpenDialog({defaultPath: sysRoot, properties: ['openDirectory']});
+        folder = folder.filePaths[0];
+        $("textarea#file").val(folder);
+        Options.setMinecraftFolder(folder)
       }
 
       function options() {

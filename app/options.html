@@ -31,14 +31,10 @@
       }
 
       async function select(){
-        let zipfile = await dialog.showOpenDialog({defaultPath: sysRoot, properties: ['openDirectory']});
-        zipfile = zipfile.filePaths[0];
-        if(zipfile === undefined){
-          $("textarea#file").val("Please select your minecraft folder !");
-        } else {
-          $("textarea#file").val(zipfile);
-          Options.setMinecraftFolder(zipfile)
-        }
+        let folder = await dialog.showOpenDialog({defaultPath: sysRoot, properties: ['openDirectory']});
+        folder = folder.filePaths[0];
+        $("textarea#file").val(folder);
+        Options.setMinecraftFolder(folder)
       }
 
       function openurl(url) {

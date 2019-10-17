@@ -6,9 +6,13 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "pack": "electron-builder --dir",
-    "dist:win": "electron-builder --windows",
-    "dist:linux": "electron-builder --linux deb tar.gz"
+    "ciwin": "electron-builder --win"
+    "cilinux": "electron-builder --linux",
+    "cidarwin": "electron-builder --mac",
+    "dist": "cross-env ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES=true electron-builder",
+    "dist:win": "npm run dist -- --win --x64",
+    "dist:mac": "npm run dist -- --mac",
+    "dist:linux": "npm run dist -- --linux --x64"
   },
   "author": "Pharuxtan",
   "license": "MIT",

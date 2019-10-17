@@ -20,11 +20,12 @@
       const DecompressZip = require('decompress-zip');
       const platformFolders = require("platform-folders");
       const fetch = require("node-fetch");
+      const sysRoot = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME);
       const Options = require('./options.js');
       const workingPath = Options.getMinecraftFolder();
       const temp = require('temp-dir');
       const url = require("url");
-      const {getCurrentWindow} = require('electron').remote;
+      const {getCurrentWindow, dialog} = require('electron').remote;
 
       $("div.randomizer").replaceWith('<div class="randomizer" style="text-align: center; position: relative; top: 35%; transform: translateY(-50%);">Loading...</div>');
 
@@ -325,14 +326,10 @@
       }
 
       async function mcselect(){
-        let mcfile = await dialog.showOpenDialog({defaultPath: sysRoot, properties: ['openDirectory']});
-        mcfile = zipfile.filePaths[0];
-        if(mcfile === undefined){
-          $("textarea#mcfile").val("Please select your minecraft folder !");
-        } else {
-          $("textarea#mcfile").val(zipfile);
-          Options.setMinecraftFolder(zipfile)
-        }
+        let folder = await dialog.showOpenDialog({defaultPath: sysRoot, properties: ['openDirectory']});
+        folder = folder.filePaths[0];
+        $("textarea#file").val(folder);
+        Options.setMinecraftFolder(folder)
       }
     </script>
 </html>
