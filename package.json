@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "ciwin": "electron-builder --win"
+    "ciwin": "electron-builder --win",
     "cilinux": "electron-builder --linux",
     "cidarwin": "electron-builder --mac",
     "dist": "cross-env ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES=true electron-builder",
